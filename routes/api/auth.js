@@ -20,6 +20,9 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+//@route  POST auth
+//@desc   Login user returns token
+//@access PUBLIC
 router.post(
   '/',
   [
@@ -42,7 +45,7 @@ router.post(
           .status(400)
           .json({ errors: [{ msg: 'Invalid credentials' }] });
       }
-
+      //check whether the given password and db password are same after decrypting
       const isMatch = await bcrypt.compare(password, users.password);
 
       if (!isMatch) {
