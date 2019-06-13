@@ -26,6 +26,9 @@ const profileSchema = new Schema({
   githubusername: {
     type: String
   },
+  bio: {
+    type: String
+  },
   experience: [
     {
       title: {
