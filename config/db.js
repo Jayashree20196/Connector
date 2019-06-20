@@ -7,11 +7,12 @@ const connectDB = async () => {
   try {
     await mongoose.connect(db, {
       useNewUrlParser: true,
-      useCreateIndex: true
+      useCreateIndex: true,
+      useFindAndModify: true
     });
     console.log('Mongo DB connected');
   } catch (err) {
-    console.err(err.message);
+    console.error(err.message);
     //Exit the error message with failure
     process.exit(1);
   }
