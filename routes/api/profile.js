@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const request = require('request');
 const auth = require('../../middleware/auth');
+const config = require('config');
+
 //importing models
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
@@ -15,7 +18,7 @@ router.get('/me', auth, async (req, res) => {
     //Get the particular profile using id
     const profile = await Profile.findOne({ user: req.user.id }).populate(
       'user',
-      ['name', 'avator']
+      ['name', 'avatar']
     );
 
     //checks if profile is empty
@@ -111,7 +114,7 @@ router.post(
 
 router.get('/', async (req, res) => {
   try {
-    const profiles = await Profile.find().populate('user', ['name', 'avator']);
+    const profiles = await Profile.find().populate('user', ['name', 'avatar']);
     res.json(profiles);
   } catch (err) {
     console.error(err.message);
@@ -126,7 +129,7 @@ router.get('/users/:user_id', async (req, res) => {
   try {
     const profile = await Profile.findOne({
       user: req.params.user_id
-    }).populate('user', ['name', 'avator']);
+    }).populate('user', ['name', 'avatar']);
 
     if (!profile) {
       return res.status(400).json({ msg: 'profile not found' });
@@ -159,7 +162,6 @@ router.delete('/', auth, async (req, res) => {
 //@route  Put to update a profile
 //@desc   update the profile details with experience
 //@access PRIVATE
-
 router.put(
   '/experience',
   auth,
@@ -287,6 +289,7 @@ router.put(
     }
   }
 );
+
 //@route  DELETE  profile/education
 //@desc   Delete one education of the profile
 //@access PRIVATE
@@ -304,4 +307,35 @@ router.delete('/education/:edu_id', auth, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+//@route  GET  profile/github/username
+//@desc   GET  Get the list of repos of username
+//@access Public
+router.get('/github/:username', (req, res) => {
+  try {
+    //object to create the url to get github repositories for the user
+    const options = {
+      uri: `http://api.github.com/users/${
+        req.params.username
+      }/repos?per_page=5&sort=created:asc&client_id=${config.get(
+        'githubClientId'
+      )}&client_secret=${config.get('githubSecret')}`,
+      method: 'GET',
+      headers: { 'user-agent': 'node js' }
+    };
+    //imported method to return the response
+    request(options, (error, body, response) => {
+      if (error) console.error(error);
+      if (response.statusCode !== 200) {
+        return res.status(404).json({ msg: 'No github profile found' });
+      }
+      //since body will be a string, so we parse it to convert it into json object
+      return res.status(200).json(JSON.parse(body));
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('server error');
+  }
+});
+
 module.exports = router;
